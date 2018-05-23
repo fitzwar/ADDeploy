@@ -1,0 +1,317 @@
+﻿{
+  "handler": "Microsoft.Compute.MultiVm",
+  "version": "0.0.1-preview",
+  "parameters": {
+    "basics": [
+      {
+        "name": "adminUsername",
+        "type": "Microsoft.Compute.UserNameTextBox",
+        "label": "Domain admin username for new domain",
+        "toolTip": "Domain admin for your new domain",
+        "constraints": {
+          "required": true
+        },
+        "osPlatform": "Windows"
+      },
+      {
+        "name": "adminCredentials",
+        "type": "Microsoft.Common.PasswordBox",
+        "label": {
+          "password": "Domain admin user password",
+          "confirmPassword": "Confirm password"
+        },
+        "toolTip": "Complex password for domain admin account",
+        "constraints": {
+          "required": true,
+          "regex": "^((?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])|(?=.*[0-9])(?=.*[a-z])(?=.*[!@#$%^&*])|(?=.*[0-9])(?=.*[A-Z])(?=.*[!@#$%^&*])|(?=.*[a-z])(?=.*[A-Z])(?=.*[!@#$%^&*])).{8,72}$",
+          "validationMessage": "Password must be at least 8 characters long and have 3 out of the following: one number, one lower case, one upper case, or one special character"
+        },
+        "options": {
+          "hideConfirmation": false
+        },
+        "osPlatform": "Windows"
+      }
+    ],
+    "steps": [
+      {
+        "name": "deploymentDetails",
+        "label": "New Domain Deployment Details",
+        "subLabel": {
+          "preValidation": "Required",
+          "postValidation": "Done"
+        },
+        "bladeTitle": "New Domain Details",
+        "elements": [
+
+          {
+            "name": "createChildDomain",
+            "type": "Microsoft.Common.DropDown",
+            "label": "Create Child Domain Name",
+            "defaultValue": "false",
+            "toolTip": "Do you want a child domain?",
+            "constraints": {
+              "allowedValues": [
+                {
+                  "label": "No child domain required",
+                  "value": "false"
+                },
+                {
+                  "label": "Yes, create a child domain",
+                  "value": "true"
+                }
+              ]
+            }
+          },
+
+          {
+            "name": "createSecondDc",
+            "type": "Microsoft.Common.DropDown",
+            "label": "Create 2 Domain Controllers",
+            "defaultValue": "true",
+            "toolTip": "Do you want 2 DCs in each domain?",
+            "constraints": {
+              "allowedValues": [
+                {
+                  "label": "Yes, build 2 domain controllers",
+                  "value": "true"
+                },
+                {
+                  "label": "No,build 1 domain controller",
+                  "value": "false"
+                }
+              ]
+            }
+
+          },
+
+          {
+            "name": "DomainName",
+            "type": "Microsoft.Common.TextBox",
+            "label": "Root Domain Name",
+            "toolTip": "Full FQDN name for the forest root domain.",
+            "defaultValue": "yourdomain.com"
+
+
+          },
+          {
+            "name": "ChildDomainName",
+            "type": "Microsoft.Common.TextBox",
+            "label": "Child Domain Name",
+            "defaultValue": "child",
+            "toolTip": "SHORT name for the child domain. New AD trees are not allowed. If you have selected not to install a child domain, this field will be ignored"
+          },
+
+          {
+  "name": "Setting Up New vNET",
+  "type": "Microsoft.Common.InfoBox",
+  "visible": true,
+            "options": {
+              "icon": "None",
+              "text": "The next section below will create a new vNET in your tenant. If you have other vNETs that you require this new vNET to communicate with (peering), make sure the IP Address range you choose doesnt overlap with your other vNETs",
+              "uri": "https://cloudinfrastructureservices.co.uk"
+            }
+            },
+
+
+          {
+            "name": "virtualNetworkName",
+            "type": "Microsoft.Network.VirtualNetworkCombo",
+            "label": {
+              "toolTip": "This will create a new vNET in your tenant. If you have other vNETs that you require this new vNET to communicate with (peering), make sure the IP Address range you choose doesnt overlap with your other vNETs",
+              "virtualNetwork": "Virtual Network",
+              "subnets": "Subnet"
+            },
+            "defaultValue": {
+              "name": "AD-vnet",
+              "addressPrefixSize": "/16"
+            },
+            "constraints": {
+              "minAddressPrefixSize": "/16"
+            },
+            "subnets": {
+              "subnet1": {
+                "label": "DC Subnet",
+                "defaultValue": {
+                  "name": "DC_Subnet",
+                  "addressPrefixSize": "/24"
+                },
+                "constraints": {
+                  "minAddressPrefixSize": "/24"
+                }
+
+              }
+            }
+          },
+
+          {
+            "name": "externalDNSForwarder ",
+            "type": "Microsoft.Common.TextBox",
+            "label": "External DNS Forwarder",
+            "defaultValue": "8.8.8.8",
+            "toolTip": "DNS forwarder for all non-domain (external) related DNS queries"
+
+          },
+
+
+
+
+          {
+            "name": "VMSize",
+            "type": "Microsoft.Compute.SizeSelector",
+            "label": "Active Directory virtual machine size",
+            "toolTip": "The size of the virtual machines that will be used for all domain controllers.",
+            "recommendedSizes": [
+              "Standard_D1_v2",
+              "Standard_D2_v2",
+              "Standard_D3_v2",
+              "Standard_DS1_v2",
+              "Standard_DS2_v2",
+              "Standard_DS3_v2"
+            ],
+            "constraints": {
+              "required": true
+
+            },
+            "osPlatform": "Windows"
+
+
+          }
+        ]
+          },
+
+          {
+            "name": "DCConfiguration",
+            "label": "DC VM Details",
+            "subLabel": {
+              "preValidation": "Required",
+              "postValidation": "Done"
+            },
+            "bladeTitle": "DC Configuration",
+            "elements": [
+
+              {
+                "name": "DC Config",
+                "type": "Microsoft.Common.InfoBox",
+                "visible": true,
+                "options": {
+                  "icon": "None",
+                  "text": "The next section confirms what host names you would like for your new DCs and IP addresses. Confirm that the DC IP addresses selected are within the DC Subnet address range you selected for your vNET otherwise the deployment will fail.",
+                  "uri": "https://cloudinfrastructureservices.co.uk"
+                }
+                },
+
+                {
+                  "name": "RootDC1Name",
+                  "type": "Microsoft.Common.TextBox",
+                  "label": "Root DC 1 Name",
+                  "toolTip": "DC name for the first DC in your forest root domain.",
+                  "defaultValue": "RootDC01"
+
+
+                },
+
+                {
+                  "name": "RootDC1IPAddress",
+                  "type": "Microsoft.Common.TextBox",
+                  "label": "Root DC 1 IP Address",
+                  "toolTip": "DC IP for the first DC in your forest root domain. Confirm this IP is in the correct address range in the new vNET you just selected",
+                  "defaultValue": "10.2.0.4"
+
+                },
+                {
+                  "name": "RootDC2Name",
+                  "type": "Microsoft.Common.TextBox",
+                  "label": "Root DC 2 Name",
+                  "toolTip": "DC name for the 2nd DC in your forest root domain. If you chose not to install a 2nd DC, this field will be ignored",
+                  "defaultValue": "RootDC02"
+
+                },
+
+                {
+                  "name": "RootDC2IPAddress",
+                  "type": "Microsoft.Common.TextBox",
+                  "label": "Root DC 2 IP Address",
+                  "toolTip": "DC IP for the 2nd DC in your forest root domain. Confirm this IP is in the correct address range in the new vNET you just selected. If you chose not to install a 2nd DC, this field will be ignored",
+                  "defaultValue": "10.2.0.5"
+
+
+                },
+
+                {
+                  "name": "ChildDC3Name",
+                  "type": "Microsoft.Common.TextBox",
+                  "label": "Child DC 1 Name",
+                  "toolTip": "DC name for the first DC in your child domain. If you chose not to install a child domain, this field will be ignored",
+                  "defaultValue": "ChildDC01"
+
+
+                },
+
+                {
+                  "name": "ChildDC3IPAddress",
+                  "type": "Microsoft.Common.TextBox",
+                  "label": "Child DC 1 IP Address",
+                  "toolTip": "DC IP for the first DC in your child domain. Confirm this IP is in the correct address range in the new vNET you just selected. If you chose not to install a child domain, this field will be ignored",
+                  "defaultValue": "10.2.0.6"
+
+                },
+                {
+                  "name": "ChildDC4Name",
+                  "type": "Microsoft.Common.TextBox",
+                  "label": "Child DC 2 Name",
+                  "toolTip": "DC name for the 2nd DC in your child domain. If you chose not to install a 2nd DC, this field will be ignored. If you chose not to install a child domain the same applies.",
+                  "defaultValue": "ChildDC02"
+
+                },
+
+                {
+                  "name": "ChildDC4IPAddress",
+                  "type": "Microsoft.Common.TextBox",
+                  "label": "Child DC 2 IP Address",
+                  "toolTip": "DC IP for the 2nd DC in your child domain. Confirm this IP is in the correct address range in the new vNET you just selected. If you chose not to install a 2nd DC, this field will be ignored. If you chose not to install a child domain the same applies.",
+                  "defaultValue": "10.2.0.7"
+
+
+
+
+                }
+
+
+
+
+                ]
+
+
+
+              }
+
+
+
+            ],
+
+    "outputs": {
+      "adminUsername": "[basics('adminUsername')]",
+      "adminPassword": "[basics('adminCredentials')]",
+      "createSecondDc": "[steps('deploymentDetails').createSecondDc.label]",
+      "DomainName": "[steps('deploymentDetails').DomainName.label]",
+      "createChildDomain": "[steps('deploymentDetails').createChildDomain.label]",
+      "ChildDomainName": "[steps('deploymentDetails').ChildDomainName.label]",
+      "virtualNetworkName": "[steps('deploymentDetails').virtualNetworkName.name]",
+      "virtualNetworkAddressRange": "[steps('deploymentDetails').virtualNetworkName.addressPrefix]",
+      "adSubnetName": "[steps('deploymentDetails').virtualNetworkName.subnets.subnet1.name]",
+      "externalDNSForwarder": "[steps('deploymentDetails').externalDNSForwarder]",
+      "adSubnet": "[steps('deploymentDetails').virtualNetworkName.subnets.subnet1.addressPrefix]",
+      "VMSize": "[steps('deploymentDetails').VMSize]",
+      "RootDC1Name": "[steps('DCConfiguration').RootDC1Name]",
+      "RootDC1IPAddress": "[steps('DCConfiguration').RootDC1IPAddress]",
+      "RootDC2Name": "[steps('DCConfiguration').RootDC2Name]",
+      "RootDC2IPAddress": "[steps('DCConfiguration').RootDC2IPAddress]",
+      "ChildDC3Name": "[steps('DCConfiguration').ChildDC3Name]",
+      "ChildDC3IPAddress": "[steps('DCConfiguration').ChildDC3IPAddress]",
+      "ChildDC4Name": "[steps('DCConfiguration').ChildDC4Name]",
+      "ChildDC4IPAddress": "[steps('DCConfiguration').ChildDC4IPAddress]",
+      "location": "[location()]"
+
+    }
+          }
+}
