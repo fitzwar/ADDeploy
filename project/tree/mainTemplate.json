@@ -174,7 +174,7 @@
       "metadata": {
         "description": "The location of resources such as templates and DSC modules that the script depends on. No need to change unless you copy or fork this template."
       },
-      "defaultValue": "https://cdn.rawgit.com/fitzwar/ADDeploy/tree/master/project"
+      "defaultValue": "https://cdn.rawgit.com/fitzwar/ADDeploy/master/project"
     },
     "_artifactsLocationSasToken": {
       "type": "securestring",
