@@ -195,7 +195,7 @@
                 "visible": true,
                 "options": {
                   "icon": "None",
-                  "text": "The next section confirms what host names you would like for your new DCs and IP addresses. Confirm that the IP addresses selected are within the IP address range you selected for your vNET otherwise the deployment will fail.",
+                  "text": "The next section confirms what host names you would like for your new DCs and IP addresses. Confirm that the DC IP addresses selected are within the DC Subnet address range you selected for your vNET otherwise the deployment will fail.",
                   "uri": "https://cloudinfrastructureservices.co.uk"
                 }
                 },
@@ -238,7 +238,7 @@
                 },
 
                 {
-                  "name": "ChildDC3Name ",
+                  "name": "ChildDC3Name",
                   "type": "Microsoft.Common.TextBox",
                   "label": "Child DC 1 Name",
                   "toolTip": "DC name for the first DC in your child domain. If you chose not to install a child domain, this field will be ignored",
