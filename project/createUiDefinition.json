@@ -144,7 +144,7 @@
           },
 
           {
-            "name": "externalDNSForwarder ",
+            "name": "externalDNSForwarder",
             "type": "Microsoft.Common.TextBox",
             "label": "External DNS Forwarder",
             "defaultValue": "8.8.8.8",

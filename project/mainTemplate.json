@@ -3,18 +3,27 @@
   "contentVersion": "1.0.0.0",
   "parameters": {
     "createChildDomain": {
-      "type": "bool",
+      "type": "string",
+      "defaultValue": "true",
+      "allowedValues": [
+        "true",
+        "false"
+        ],
       "metadata": {
-        "description": "Do you want a child domain? If false, the parameters for the child domain are ignored. "
-      },
-      "defaultValue": true
+        "description": "Do you want to create a child domain? If false: parameters are ignored."
+      }
     },
     "createSecondDc": {
-      "type": "bool",
+      "type": "string",
+      "defaultValue": "false",
+      "allowedValues": [
+        "true",
+        "false"
+        ],
       "metadata": {
-        "description": "Do you want a second DC in each domain? If false: parameters for DC2 and DC4 are ignored. "
-      },
-      "defaultValue": false
+      "description": "Do you want a second DC in each domain? If false: parameters for DC2 and DC4 are ignored. "
+    }
+
     },
     "DomainName": {
       "type": "string",
