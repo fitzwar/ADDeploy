@@ -108,7 +108,7 @@
             "options": {
               "icon": "None",
               "text": "The next section below will create a new vNET in your tenant. If you have other vNETs that you require this new vNET to communicate with (peering), make sure the IP Address range you choose doesnt overlap with your other vNETs",
-              "uri": "https://cloudinfrastructureservices.co.uk"
+              "uri": "https://cloudinfrastructureservices.co.uk/how-to-setup-a-new-active-directory-2016-forest-domain-in-azure-iaas/"
             }
             },
 
@@ -196,7 +196,7 @@
                 "options": {
                   "icon": "None",
                   "text": "The next section confirms what host names you would like for your new DCs and IP addresses. Confirm that the DC IP addresses selected are within the DC Subnet address range you selected for your vNET otherwise the deployment will fail.",
-                  "uri": "https://cloudinfrastructureservices.co.uk"
+                  "uri": "https://cloudinfrastructureservices.co.uk/how-to-setup-a-new-active-directory-2016-forest-domain-in-azure-iaas/"
                 }
                 },
 
@@ -292,10 +292,10 @@
     "outputs": {
       "adminUsername": "[basics('adminUsername')]",
       "adminPassword": "[basics('adminCredentials')]",
-      "createSecondDc": "[steps('deploymentDetails').createSecondDc.label]",
-      "DomainName": "[steps('deploymentDetails').DomainName.label]",
-      "createChildDomain": "[steps('deploymentDetails').createChildDomain.label]",
-      "ChildDomainName": "[steps('deploymentDetails').ChildDomainName.label]",
+      "createSecondDc": "[steps('deploymentDetails').createSecondDc]",
+      "DomainName": "[steps('deploymentDetails').DomainName]",
+      "createChildDomain": "[steps('deploymentDetails').createChildDomain]",
+      "ChildDomainName": "[steps('deploymentDetails').ChildDomainName]",
       "virtualNetworkName": "[steps('deploymentDetails').virtualNetworkName.name]",
       "virtualNetworkAddressRange": "[steps('deploymentDetails').virtualNetworkName.addressPrefix]",
       "adSubnetName": "[steps('deploymentDetails').virtualNetworkName.subnets.subnet1.name]",
