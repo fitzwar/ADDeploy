@@ -1,6 +1,7 @@
 ﻿{
+  "$schema": "https://schema.management.azure.com/schemas/0.1.2-preview/CreateUIDefinition.MultiVm.json#",
   "handler": "Microsoft.Compute.MultiVm",
-  "version": "0.0.1-preview",
+  "version": "0.1.2-preview",
   "parameters": {
     "basics": [
       {
@@ -9,7 +10,9 @@
         "label": "Domain admin username for new domain",
         "toolTip": "Domain admin for your new domain",
         "constraints": {
-          "required": true
+          "required": true,
+          "regex": "^[a-z0-9A-Z-._]{6,20}$",
+          "validationMessage": "Username must be between 6 and 20 characters and can only contain numbers or the following characters: underscore (_), hyphen (-) or dot (.). Please note (.) or (-) is not permitted at the beginning or end of the username. (_) is permitted at the beginning or end of the username."
         },
         "osPlatform": "Windows"
       },
@@ -23,8 +26,8 @@
         "toolTip": "Complex password for domain admin account",
         "constraints": {
           "required": true,
-          "regex": "^((?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])|(?=.*[0-9])(?=.*[a-z])(?=.*[!@#$%^&*])|(?=.*[0-9])(?=.*[A-Z])(?=.*[!@#$%^&*])|(?=.*[a-z])(?=.*[A-Z])(?=.*[!@#$%^&*])).{8,72}$",
-          "validationMessage": "Password must be at least 8 characters long and have 3 out of the following: one number, one lower case, one upper case, or one special character"
+          "regex": "^((?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])|(?=.*[0-9])(?=.*[a-z])(?=.*[!@#$%^&*])|(?=.*[0-9])(?=.*[A-Z])(?=.*[!@#$%^&*])|(?=.*[a-z])(?=.*[A-Z])(?=.*[!@#$%^&*])).{12,72}$",
+          "validationMessage": "Password must be at least 12 characters long and have 3 out of the following: one number, one lower case, one upper case, or one special character"
         },
         "options": {
           "hideConfirmation": false
@@ -45,18 +48,19 @@
 
           {
             "name": "createChildDomain",
-            "type": "Microsoft.Common.DropDown",
+            "type": "Microsoft.Common.OptionsGroup",
             "label": "Create Child Domain Name",
-            "defaultValue": "false",
+            "defaultValue": "No",
             "toolTip": "Do you want a child domain?",
             "constraints": {
+              "required": true,
               "allowedValues": [
                 {
-                  "label": "No child domain required",
+                  "label": "No",
                   "value": "false"
                 },
                 {
-                  "label": "Yes, create a child domain",
+                  "label": "Yes",
                   "value": "true"
                 }
               ]
@@ -65,18 +69,19 @@
 
           {
             "name": "createSecondDc",
-            "type": "Microsoft.Common.DropDown",
+            "type": "Microsoft.Common.OptionsGroup",
             "label": "Create 2 Domain Controllers",
-            "defaultValue": "true",
+            "defaultValue": "Yes",
             "toolTip": "Do you want 2 DCs in each domain?",
             "constraints": {
+              "required": true,
               "allowedValues": [
                 {
-                  "label": "Yes, build 2 domain controllers",
+                  "label": "Yes",
                   "value": "true"
                 },
                 {
-                  "label": "No,build 1 domain controller",
+                  "label": "No",
                   "value": "false"
                 }
               ]
@@ -89,7 +94,12 @@
             "type": "Microsoft.Common.TextBox",
             "label": "Root Domain Name",
             "toolTip": "Full FQDN name for the forest root domain.",
-            "defaultValue": "yourdomain.com"
+            "defaultValue": "yourdomain.com",
+            "constraints": {
+              "required": true,
+              "regex": "^^[a-zA-Z0-9][a-zA-Z0-9-]{1,61}[a-zA-Z][.]{1,1}[a-zA-Z]{2,}$",
+              "validationMessage": "The root domain name must be at least 4 - 63 characters long and contain a DNS TLD extension, for example .com or .local. Only a hyphen (-) character is allowed."
+            }
 
 
           },
@@ -98,19 +108,23 @@
             "type": "Microsoft.Common.TextBox",
             "label": "Child Domain Name",
             "defaultValue": "child",
-            "toolTip": "SHORT name for the child domain. New AD trees are not allowed. If you have selected not to install a child domain, this field will be ignored"
+            "toolTip": "SHORT name for the child domain. New AD trees are not allowed. If you have selected not to install a child domain, this field will be ignored",
+            "constraints": {
+              "regex": "^[a-zA-Z0-9-]{4,63}$",
+              "validationMessage": "The child domain name must be at least 4 - 63 characters long. No TLD extensions allowed in a child domain."
+            }
           },
 
           {
-  "name": "Setting Up New vNET",
-  "type": "Microsoft.Common.InfoBox",
-  "visible": true,
+            "name": "Setting Up New vNET",
+            "type": "Microsoft.Common.InfoBox",
+            "visible": true,
             "options": {
               "icon": "None",
               "text": "The next section below will create a new vNET in your tenant. If you have other vNETs that you require this new vNET to communicate with (peering), make sure the IP Address range you choose doesnt overlap with your other vNETs",
               "uri": "https://cloudinfrastructureservices.co.uk/how-to-setup-a-new-active-directory-2016-forest-domain-in-azure-iaas/"
             }
-            },
+          },
 
 
           {
@@ -124,9 +138,11 @@
             "defaultValue": {
               "name": "AD-vnet",
               "addressPrefixSize": "/16"
+
             },
             "constraints": {
               "minAddressPrefixSize": "/16"
+
             },
             "subnets": {
               "subnet1": {
@@ -148,8 +164,11 @@
             "type": "Microsoft.Common.TextBox",
             "label": "External DNS Forwarder",
             "defaultValue": "8.8.8.8",
-            "toolTip": "DNS forwarder for all non-domain (external) related DNS queries"
-
+            "constraints": {
+              "regex": "^([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(?<!172\\.(16|17|18|19|20|21|22|23|24|25|26|27|28|29|30|31))(?<!127)(?<!^10)(?<!^0)\\.([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(?<!192\\.168)(?<!172\\.(16|17|18|19|20|21|22|23|24|25|26|27|28|29|30|31))\\.([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(?<!\\.255$)$",
+              "validationMessage": "Please specify a valid public ip address for your external DNS forwarder",
+              "toolTip": "DNS forwarder for all non-domain (external) related DNS queries"
+            }
           },
 
 
@@ -177,118 +196,137 @@
 
           }
         ]
+      },
+
+      {
+        "name": "DCConfiguration",
+        "label": "DC VM Details",
+        "subLabel": {
+          "preValidation": "Required",
+          "postValidation": "Done"
+        },
+        "bladeTitle": "DC Configuration",
+        "elements": [
+
+          {
+            "name": "DC Config",
+            "type": "Microsoft.Common.InfoBox",
+            "visible": true,
+            "options": {
+              "icon": "None",
+              "text": "The next section confirms what host names you would like for your new DCs and IP addresses. Confirm that the DC IP addresses selected are within the DC Subnet address range you selected for your vNET otherwise the deployment will fail.",
+              "uri": "https://cloudinfrastructureservices.co.uk/how-to-setup-a-new-active-directory-2016-forest-domain-in-azure-iaas/",
+              "constraints": {
+                "required": true,
+                "regex": "^[a-z0-9A-Z]{1,30}$",
+                "validationMessage": "Only alphanumeric characters are allowed, and the value must be 1-30 characters long."
+              }
+            }
           },
 
           {
-            "name": "DCConfiguration",
-            "label": "DC VM Details",
-            "subLabel": {
-              "preValidation": "Required",
-              "postValidation": "Done"
-            },
-            "bladeTitle": "DC Configuration",
-            "elements": [
-
-              {
-                "name": "DC Config",
-                "type": "Microsoft.Common.InfoBox",
-                "visible": true,
-                "options": {
-                  "icon": "None",
-                  "text": "The next section confirms what host names you would like for your new DCs and IP addresses. Confirm that the DC IP addresses selected are within the DC Subnet address range you selected for your vNET otherwise the deployment will fail.",
-                  "uri": "https://cloudinfrastructureservices.co.uk/how-to-setup-a-new-active-directory-2016-forest-domain-in-azure-iaas/"
-                }
-                },
-
-                {
-                  "name": "RootDC1Name",
-                  "type": "Microsoft.Common.TextBox",
-                  "label": "Root DC 1 Name",
-                  "toolTip": "DC name for the first DC in your forest root domain.",
-                  "defaultValue": "RootDC01"
+            "name": "RootDC1Name",
+            "type": "Microsoft.Common.TextBox",
+            "label": "Root DC 1 Name",
+            "toolTip": "DC name for the first DC in your forest root domain.",
+            "defaultValue": "RootDC01",
+            "constraints": {
+              "required": true,
+              "regex": "^[a-z0-9A-Z-]{2,15}$",
+              "validationMessage": "The DC Name must be between 2 and 15 characters long and contain letters, numbers and hyphens only."
+            }
 
 
-                },
+          },
 
-                {
-                  "name": "RootDC1IPAddress",
-                  "type": "Microsoft.Common.TextBox",
-                  "label": "Root DC 1 IP Address",
-                  "toolTip": "DC IP for the first DC in your forest root domain. Confirm this IP is in the correct address range in the new vNET you just selected",
-                  "defaultValue": "10.2.0.4"
-
-                },
-                {
-                  "name": "RootDC2Name",
-                  "type": "Microsoft.Common.TextBox",
-                  "label": "Root DC 2 Name",
-                  "toolTip": "DC name for the 2nd DC in your forest root domain. If you chose not to install a 2nd DC, this field will be ignored",
-                  "defaultValue": "RootDC02"
-
-                },
-
-                {
-                  "name": "RootDC2IPAddress",
-                  "type": "Microsoft.Common.TextBox",
-                  "label": "Root DC 2 IP Address",
-                  "toolTip": "DC IP for the 2nd DC in your forest root domain. Confirm this IP is in the correct address range in the new vNET you just selected. If you chose not to install a 2nd DC, this field will be ignored",
-                  "defaultValue": "10.2.0.5"
+          {
+            "name": "RootDC1IPAddress",
+            "type": "Microsoft.Common.TextBox",
+            "label": "Root DC 1 IP Address",
+            "toolTip": "DC IP for the first DC in your forest root domain. Confirm this IP is in the correct address range in the new vNET you just selected. Addresses need to start from x.x.x.4 as the first 3 addresses are reserved by Azure.",
+            "defaultValue": "10.2.0.4",
+            "constraints": {
+              "required": true,
+              "regex": "(^192\\.168\\.([0-9]|[0-9][0-9]|[0-2][0-5][0-5])\\.([4-9]|[0-9][0-9]|[0-2][0-5][0-5])$)|(^172\\.([1][6-9]|[2][0-9]|[3][0-1])\\.([0-9]|[0-9][0-9]|[0-2][0-5][0-5])\\.([4-9]|[0-9][0-9]|[0-2][0-5][0-5])$)|(^10\\.([0-9]|[0-9][0-9]|[0-2][0-5][0-5])\\.([0-9]|[0-9][0-9]|[0-2][0-5][0-5])\\.([4-9]|[0-9][0-9]|[0-2][0-5][0-5])$)",
+              "validationMessage": "Please specify a valid ip4 private address that matches the subnet range in the new vNet your creating. Addresses need to start from x.x.x.4 as the first 3 addresses are reserved by Azure."
+            }
 
 
-                },
+          },
+          {
+            "name": "RootDC2Name",
+            "type": "Microsoft.Common.TextBox",
+            "label": "Root DC 2 Name",
+            "toolTip": "DC name for the 2nd DC in your forest root domain. If you chose not to install a 2nd DC, this field will be ignored",
+            "defaultValue": "RootDC02",
+            "constraints": {
+              "regex": "^[a-z0-9A-Z-]{2,15}$",
+              "validationMessage": "The DC Name must be between 2 and 15 characters long and contain letters, numbers and hyphens only."
+            }
 
-                {
-                  "name": "ChildDC3Name",
-                  "type": "Microsoft.Common.TextBox",
-                  "label": "Child DC 1 Name",
-                  "toolTip": "DC name for the first DC in your child domain. If you chose not to install a child domain, this field will be ignored",
-                  "defaultValue": "ChildDC01"
+          },
 
+          {
+            "name": "RootDC2IPAddress",
+            "type": "Microsoft.Common.TextBox",
+            "label": "Root DC 2 IP Address",
+            "toolTip": "DC IP for the 2nd DC in your forest root domain. Confirm this IP is in the correct address range in the new vNET you just selected. If you chose not to install a 2nd DC, this field will be ignored",
+            "defaultValue": "10.2.0.5",
+            "constraints": {
+              "regex": "(^192\\.168\\.([0-9]|[0-9][0-9]|[0-2][0-5][0-5])\\.([4-9]|[0-9][0-9]|[0-2][0-5][0-5])$)|(^172\\.([1][6-9]|[2][0-9]|[3][0-1])\\.([0-9]|[0-9][0-9]|[0-2][0-5][0-5])\\.([4-9]|[0-9][0-9]|[0-2][0-5][0-5])$)|(^10\\.([0-9]|[0-9][0-9]|[0-2][0-5][0-5])\\.([0-9]|[0-9][0-9]|[0-2][0-5][0-5])\\.([4-9]|[0-9][0-9]|[0-2][0-5][0-5])$)",
+              "validationMessage": "Please specify a valid ip4 private address that matches the subnet range in the new vNet your creating. Addresses need to start from x.x.x.4 as the first 3 addresses are reserved by Azure."
+            }
+          },
+          {
+            "name": "ChildDC3Name",
+            "type": "Microsoft.Common.TextBox",
+            "label": "Child DC 1 Name",
+            "toolTip": "DC name for the first DC in your child domain. If you chose not to install a child domain, this field will be ignored",
+            "defaultValue": "ChildDC01",
+            "constraints": {
+              "regex": "^[a-z0-9A-Z-]{2,15}$",
+              "validationMessage": "The DC Name must be between 2 and 15 characters long and contain letters, numbers and hyphens only."
+            }
 
-                },
+          },
 
-                {
-                  "name": "ChildDC3IPAddress",
-                  "type": "Microsoft.Common.TextBox",
-                  "label": "Child DC 1 IP Address",
-                  "toolTip": "DC IP for the first DC in your child domain. Confirm this IP is in the correct address range in the new vNET you just selected. If you chose not to install a child domain, this field will be ignored",
-                  "defaultValue": "10.2.0.6"
+          {
+            "name": "ChildDC3IPAddress",
+            "type": "Microsoft.Common.TextBox",
+            "label": "Child DC 1 IP Address",
+            "toolTip": "DC IP for the first DC in your child domain. Confirm this IP is in the correct address range in the new vNET you just selected. If you chose not to install a child domain, this field will be ignored",
+            "defaultValue": "10.2.0.6",
+            "constraints": {
+              "regex": "(^192\\.168\\.([0-9]|[0-9][0-9]|[0-2][0-5][0-5])\\.([4-9]|[0-9][0-9]|[0-2][0-5][0-5])$)|(^172\\.([1][6-9]|[2][0-9]|[3][0-1])\\.([0-9]|[0-9][0-9]|[0-2][0-5][0-5])\\.([4-9]|[0-9][0-9]|[0-2][0-5][0-5])$)|(^10\\.([0-9]|[0-9][0-9]|[0-2][0-5][0-5])\\.([0-9]|[0-9][0-9]|[0-2][0-5][0-5])\\.([4-9]|[0-9][0-9]|[0-2][0-5][0-5])$)",
+              "validationMessage": "Please specify a valid ip4 private address that matches the subnet range in the new vNet your creating. Addresses need to start from x.x.x.4 as the first 3 addresses are reserved by Azure."
+            }
+          },
+          {
+            "name": "ChildDC4Name",
+            "type": "Microsoft.Common.TextBox",
+            "label": "Child DC 2 Name",
+            "toolTip": "DC name for the 2nd DC in your child domain. If you chose not to install a 2nd DC, this field will be ignored. If you chose not to install a child domain the same applies.",
+            "defaultValue": "ChildDC02",
+            "constraints": {
+              "regex": "^[a-z0-9A-Z-]{2,15}$",
+              "validationMessage": "The DC Name must be between 2 and 15 characters long and contain letters, numbers and hyphens only."
+            }
+          },
 
-                },
-                {
-                  "name": "ChildDC4Name",
-                  "type": "Microsoft.Common.TextBox",
-                  "label": "Child DC 2 Name",
-                  "toolTip": "DC name for the 2nd DC in your child domain. If you chose not to install a 2nd DC, this field will be ignored. If you chose not to install a child domain the same applies.",
-                  "defaultValue": "ChildDC02"
-
-                },
-
-                {
-                  "name": "ChildDC4IPAddress",
-                  "type": "Microsoft.Common.TextBox",
-                  "label": "Child DC 2 IP Address",
-                  "toolTip": "DC IP for the 2nd DC in your child domain. Confirm this IP is in the correct address range in the new vNET you just selected. If you chose not to install a 2nd DC, this field will be ignored. If you chose not to install a child domain the same applies.",
-                  "defaultValue": "10.2.0.7"
-
-
-
-
-                }
-
-
-
-
-                ]
-
-
-
-              }
-
-
-
-            ],
-
+          {
+            "name": "ChildDC4IPAddress",
+            "type": "Microsoft.Common.TextBox",
+            "label": "Child DC 2 IP Address",
+            "toolTip": "DC IP for the 2nd DC in your child domain. Confirm this IP is in the correct address range in the new vNET you just selected. If you chose not to install a 2nd DC, this field will be ignored. If you chose not to install a child domain the same applies.",
+            "defaultValue": "10.2.0.7",
+            "constraints": {
+              "regex": "(^192\\.168\\.([0-9]|[0-9][0-9]|[0-2][0-5][0-5])\\.([4-9]|[0-9][0-9]|[0-2][0-5][0-5])$)|(^172\\.([1][6-9]|[2][0-9]|[3][0-1])\\.([0-9]|[0-9][0-9]|[0-2][0-5][0-5])\\.([4-9]|[0-9][0-9]|[0-2][0-5][0-5])$)|(^10\\.([0-9]|[0-9][0-9]|[0-2][0-5][0-5])\\.([0-9]|[0-9][0-9]|[0-2][0-5][0-5])\\.([4-9]|[0-9][0-9]|[0-2][0-5][0-5])$)",
+              "validationMessage": "Please specify a valid ip4 private address that matches the subnet range in the new vNet your creating. Addresses need to start from x.x.x.4 as the first 3 addresses are reserved by Azure."
+            }
+          }
+        ]
+      }
+    ],
     "outputs": {
       "adminUsername": "[basics('adminUsername')]",
       "adminPassword": "[basics('adminCredentials')]",
@@ -297,7 +335,7 @@
       "createChildDomain": "[steps('deploymentDetails').createChildDomain]",
       "ChildDomainName": "[steps('deploymentDetails').ChildDomainName]",
       "virtualNetworkName": "[steps('deploymentDetails').virtualNetworkName.name]",
-      "virtualNetworkAddressRange": "[steps('deploymentDetails').virtualNetworkName.addressPrefix]",
+      "virtualNetworkAddressRange": "[steps('deploymentDetails').virtualNetworkName.addressPrefixes]",
       "adSubnetName": "[steps('deploymentDetails').virtualNetworkName.subnets.subnet1.name]",
       "externalDNSForwarder": "[steps('deploymentDetails').externalDNSForwarder]",
       "adSubnet": "[steps('deploymentDetails').virtualNetworkName.subnets.subnet1.addressPrefix]",
@@ -313,5 +351,5 @@
       "location": "[location()]"
 
     }
-          }
+  }
 }

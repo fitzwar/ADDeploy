@@ -4,25 +4,25 @@
   "parameters": {
     "createChildDomain": {
       "type": "string",
-      "defaultValue": "true",
+      "defaultValue": "false",
       "allowedValues": [
         "true",
         "false"
-        ],
+      ],
       "metadata": {
         "description": "Do you want to create a child domain? If false: parameters are ignored."
       }
     },
     "createSecondDc": {
       "type": "string",
-      "defaultValue": "false",
+      "defaultValue": "true",
       "allowedValues": [
         "true",
         "false"
-        ],
+      ],
       "metadata": {
-      "description": "Do you want a second DC in each domain? If false: parameters for DC2 and DC4 are ignored. "
-    }
+        "description": "Do you want a second DC in each domain? If false: parameters for DC2 and DC4 are ignored. "
+      }
 
     },
     "DomainName": {
@@ -31,7 +31,8 @@
         "description": "Full FQDN name for the forest root domain."
       },
       "defaultValue": "yourdomain.com",
-      "minlength": 4
+      "minlength": 4,
+      "maxlength": 63
     },
     "ChildDomainName": {
       "type": "string",
@@ -39,8 +40,8 @@
         "description": "SHORT name for the child domain. New AD trees are not allowed."
       },
       "defaultValue": "child",
-      "minlength": 2,
-      "maxlength": 15
+      "minlength": 0,
+      "maxlength": 63
     },
     "adminUsername": {
       "type": "string",
@@ -82,10 +83,10 @@
       },
       "defaultValue": "adVNET",
       "minlength": 2,
-      "maxlength": 16
+      "maxlength": 64
     },
     "virtualNetworkAddressRange": {
-      "type": "string",
+      "type": "array",
       "metadata": {
         "description": "The address range of the new VNET in CIDR format."
       },
@@ -105,7 +106,7 @@
       },
       "defaultValue": "adSubnet",
       "minlength": 2,
-      "maxlength": 16
+      "maxlength": 80
     },
     "adSubnet": {
       "type": "string",
@@ -136,7 +137,7 @@
         "description": "The computer name of the second DC of the root domain."
       },
       "defaultValue": "rootdc2",
-      "minlength": 2,
+      "minlength": 0,
       "maxlength": 15
     },
     "RootDC2IPAddress": {
@@ -152,7 +153,7 @@
         "description": "The computer name of the first DC of the CHILD domain."
       },
       "defaultValue": "childdc3",
-      "minlength": 2,
+      "minlength": 0,
       "maxlength": 15
     },
     "ChildDC3IPAddress": {
@@ -168,7 +169,7 @@
         "description": "The computer name of the second DC of the CHILD domain."
       },
       "defaultValue": "childdc4",
-      "minlength": 2,
+      "minlength": 0,
       "maxlength": 15
     },
     "ChildDC4IPAddress": {
@@ -183,7 +184,7 @@
       "metadata": {
         "description": "The location of resources such as templates and DSC modules that the script depends on. No need to change unless you copy or fork this template."
       },
-      "defaultValue": "https://cdn.rawgit.com/fitzwar/ADDeploy/master/project"
+      "defaultValue": "[string(deployment().properties.templateLink.uri)]"
     },
     "_artifactsLocationSasToken": {
       "type": "securestring",
@@ -246,6 +247,7 @@
       "name": "CreateVNET",
       "type": "Microsoft.Resources/deployments",
       "apiVersion": "2016-09-01",
+      "location": "[parameters('location')]",
       "properties": {
         "mode": "Incremental",
         "templateLink": {
@@ -298,6 +300,7 @@
       "name": "CreateADVM1",
       "type": "Microsoft.Resources/deployments",
       "apiVersion": "2016-09-01",
+      "location": "[parameters('location')]",
       "dependsOn": [
         "[resourceId('Microsoft.Resources/deployments','CreateVNET')]",
         "[resourceId('Microsoft.Compute/availabilitySets', variables('adAvailabilitySetNameRoot'))]"
@@ -385,6 +388,7 @@
       "type": "Microsoft.Resources/deployments",
       "condition": "[equals(parameters('createChildDomain'),'true')]",
       "apiVersion": "2016-09-01",
+      "location": "[parameters('location')]",
       "dependsOn": [
         "[resourceId('Microsoft.Resources/deployments','CreateVNET')]",
         "[resourceId('Microsoft.Compute/availabilitySets', variables('adAvailabilitySetNameChild'))]"
@@ -396,7 +400,7 @@
           "contentVersion": "1.0.0.0"
         },
         "parameters": {
-          "virtualNetworkName": {
+            "virtualNetworkName": {
             "value": "[parameters('virtualNetworkName')]"
           },
           "subnetName": {
@@ -476,6 +480,7 @@
       "name": "CreateADVM2",
       "type": "Microsoft.Resources/deployments",
       "apiVersion": "2016-09-01",
+      "location": "[parameters('location')]",
       "condition": "[equals(parameters('createSecondDc'),'true')]",
       "dependsOn": [
         "[resourceId('Microsoft.Resources/deployments','CreateVNET')]",
@@ -488,7 +493,7 @@
           "contentVersion": "1.0.0.0"
         },
         "parameters": {
-          "virtualNetworkName": {
+           "virtualNetworkName": {
             "value": "[parameters('virtualNetworkName')]"
           },
           "subnetName": {
@@ -565,7 +570,8 @@
       "name": "CreateADVM4",
       "type": "Microsoft.Resources/deployments",
       "apiVersion": "2016-09-01",
-      "condition": "[equals(parameters('createSecondDc'),'true')][and(equals(parameters('createChildDomain'),'true'))]",
+      "location": "[parameters('location')]",
+      "condition": "[and(equals(parameters('createSecondDc'),'true'), equals(parameters('createChildDomain'),'true'))]",
       "dependsOn": [
         "[resourceId('Microsoft.Resources/deployments','CreateVNET')]",
         "[resourceId('Microsoft.Compute/availabilitySets', variables('adAvailabilitySetNameChild'))]"
@@ -577,7 +583,7 @@
           "contentVersion": "1.0.0.0"
         },
         "parameters": {
-          "virtualNetworkName": {
+           "virtualNetworkName": {
             "value": "[parameters('virtualNetworkName')]"
           },
           "subnetName": {
@@ -610,7 +616,7 @@
     {
       "name": "ConfiguringChildDC4",
       "type": "Microsoft.Resources/deployments",
-      "condition": "[equals(parameters('createSecondDc'),'true')][and(equals(parameters('createChildDomain'),'true'))]",
+      "condition": "[and(equals(parameters('createSecondDc'),'true'), equals(parameters('createChildDomain'),'true'))]",
       "apiVersion": "2016-09-01",
       "dependsOn": [
         "Microsoft.Resources/deployments/CreateADVM4",
@@ -654,6 +660,7 @@
       "name": "UpdateVNet",
       "type": "Microsoft.Resources/deployments",
       "apiVersion": "2016-09-01",
+      "location": "[parameters('location')]",
       "dependsOn": [
         "Microsoft.Resources/deployments/CreateChildDomain"
       ],
@@ -681,8 +688,7 @@
           },
           "DNSServerAddress": {
             "value": [
-              "[parameters('RootDC1IPAddress')]",
-              "[parameters('RootDC2IPAddress')]"
+              "[parameters('RootDC1IPAddress')]"
             ]
           }
         }
@@ -690,3 +696,4 @@
     }
   ]
 }
+
